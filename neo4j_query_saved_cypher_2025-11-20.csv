@@ -1,0 +1,158 @@
+name,description,query,id,parentId,isFolder
+Del1 codes,,,0,,true
+1. Create a Patient Node,,"// 1. Create a Patient Node
+CREATE (p:Patient {
+  patientID: ""P001"",
+  age_group: ""older_low_tech_utilizer"",
+  gender: ""M""
+})
+RETURN p;",1,0,false
+2. Create a Staff Node,,"// 2. Create a Staff Node
+CREATE (s:Staff {
+  staffID: ""S001"",
+  role: ""Nurse"",
+  department: ""Emergency""
+})
+RETURN s;",2,0,false
+3. Create a Process_Activity Node,,"// 3. Create a Process_Activity Node
+CREATE (a:Process_Activity {
+  activityID: ""A001"",
+  name: ""Triage"",
+  type: ""Clinical""
+})
+RETURN a;",3,0,false
+4. Create a Technology_System Node,,"// 4. Create a Technology_System Node
+CREATE (t:Technology_System {
+  systemID: ""T001"",
+  name: ""Electronic_Health_Record (EHR)"",
+  type: ""Software""
+})
+RETURN t;",4,0,false
+5. Create a Feedback_Comment Node,,"// 5. Create a Feedback_Comment Node
+CREATE (f:Feedback_Comment {
+  commentID: ""F001"",
+  source: ""Google_Reviews"",
+  overall_sentiment: ""negative""
+})
+RETURN f;",5,0,false
+6. Create an Issue Node,,"// 6. Create an Issue Node
+CREATE (i:Issue {
+  issueID: ""I001"",
+  description: ""Long wait time"",
+  category: ""Procedures_Standards""
+})
+RETURN i;",6,0,false
+7. Create a Recommendation Node,,"// 7. Create a Recommendation Node
+CREATE (r:Recommendation {
+  recommendationID: ""R001"",
+  description: ""Implement a digital queue system"",
+  priority: ""High""
+})
+RETURN r;",7,0,false
+8. Create a Location Node,,"// 8. Create a Location Node
+CREATE (l:Location {
+  locationID: ""L001"",
+  name: ""Waiting_Room""
+})
+RETURN l;",8,0,false
+9. Create an EMPI_Record Node,,"// 9. Create an EMPI_Record Node
+CREATE (e:EMPI_Record {
+  empiID: ""E001"",
+  patient_record_link: ""HIS_12345""
+})
+RETURN e;",9,0,false
+1. Patient HAS_EMPI Record,,"// 1. Patient HAS_EMPI Record
+MATCH (p:Patient {patientID: ""P001""}), (e:EMPI_Record {empiID: ""E001""})
+CREATE (p)-[:HAS_EMPI]->(e);",10,0,false
+2. Patient UNDERGOES a Process,,"// 2. Patient UNDERGOES a Process
+MATCH (p:Patient {patientID: ""P001""}), (a:Process_Activity {activityID: ""A001""})
+CREATE (p)-[:UNDERGOES]->(a);",11,0,false
+3. Patient GIVES_FEEDBACK,,"// 3. Patient GIVES_FEEDBACK
+MATCH (p:Patient {patientID: ""P001""}), (f:Feedback_Comment {commentID: ""F001""})
+CREATE (p)-[:GIVES_FEEDBACK]->(f);",12,0,false
+4. Patient EXPERIENCES an Issue,,"// 4. Patient EXPERIENCES an Issue
+MATCH (p:Patient {patientID: ""P001""}), (i:Issue {issueID: ""I001""})
+CREATE (p)-[:EXPERIENCES]->(i);",13,0,false
+6. Staff USES a Technology System,,"// 6. Staff USES a Technology System
+MATCH (s:Staff {staffID: ""S001""}), (t:Technology_System {systemID: ""T001""})
+CREATE (s)-[:USES]->(t);",14,0,false
+5. Staff PERFORMS a Process,,"// 5. Staff PERFORMS a Process
+MATCH (s:Staff {staffID: ""S001""}), (a:Process_Activity {activityID: ""A001""})
+CREATE (s)-[:PERFORMS]->(a);",15,0,false
+7. Process USES_TECH Technology,,"// 7. Process USES_TECH Technology
+MATCH (a:Process_Activity {activityID: ""A001""}), (t:Technology_System {systemID: ""T001""})
+CREATE (a)-[:USES_TECH]->(t);",16,0,false
+8. Process CAUSES an Issue,,"// 8. Process CAUSES an Issue
+MATCH (a:Process_Activity {activityID: ""A001""}), (i:Issue {issueID: ""I001""})
+CREATE (a)-[:CAUSES]->(i);",17,0,false
+9. Issue ADDRESSED_BY a Recommendation,,"// 9. Issue ADDRESSED_BY a Recommendation
+MATCH (i:Issue {issueID: ""I001""}), (r:Recommendation {recommendationID: ""R001""})
+CREATE (i)-[:ADDRESSED_BY]->(r);",18,0,false
+10. Staff WORKS_IN a Location (Let's create a new Staff and Location for this),,"// 10. Staff WORKS_IN a Location (Let's create a new Staff and Location for this)
+MATCH (s:Staff {staffID: ""S001""}), (l:Location {locationID: ""L001""})
+CREATE (s)-[:WORKS_IN]->(l);",19,0,false
+11. Process OCCURS_IN a Location,,"// 11. Process OCCURS_IN a Location
+MATCH (a:Process_Activity {activityID: ""A001""}), (l:Location {locationID: ""L001""})
+CREATE (a)-[:OCCURS_IN]->(l);",20,0,false
+12. Technology_System RELATED_TO an Issue (Let's create a new Issue for this),,"// 12. Technology_System RELATED_TO an Issue (Let's create a new Issue for this)
+MATCH (t:Technology_System {systemID: ""T001""}), (i:Issue {issueID: ""I001""})
+CREATE (t)-[:RELATED_TO]->(i);",21,0,false
+623 graph model Cypher,,CALL db.schema.visualization(),22,0,false
+Create uniqueness constraints for all primary keys,,"// Create uniqueness constraints for all primary keys
+// This ensures all patientIDs are unique and creates an index for speed
+CREATE CONSTRAINT patient_id IF NOT EXISTS FOR (p:Patient) REQUIRE p.patientID IS UNIQUE;
+CREATE CONSTRAINT staff_id IF NOT EXISTS FOR (s:Staff) REQUIRE s.staffID IS UNIQUE;
+CREATE CONSTRAINT activity_id IF NOT EXISTS FOR (a:Process_Activity) REQUIRE a.activityID IS UNIQUE;
+CREATE CONSTRAINT system_id IF NOT EXISTS FOR (t:Technology_System) REQUIRE t.systemID IS UNIQUE;
+CREATE CONSTRAINT issue_id IF NOT EXISTS FOR (i:Issue) REQUIRE i.issueID IS UNIQUE;
+CREATE CONSTRAINT comment_id IF NOT EXISTS FOR (f:Feedback_Comment) REQUIRE f.commentID IS UNIQUE;
+CREATE CONSTRAINT recommendation_id IF NOT EXISTS FOR (r:Recommendation) REQUIRE r.recommendationID IS UNIQUE;
+CREATE CONSTRAINT location_id IF NOT EXISTS FOR (l:Location) REQUIRE l.locationID IS UNIQUE;
+CREATE CONSTRAINT empi_id IF NOT EXISTS FOR (e:EMPI_Record) REQUIRE e.empiID IS UNIQUE;",23,0,false
+4b q1,,"MATCH (p:Patient)-[:UNDERGOES]->(pa:Process_Activity)
+RETURN p.patientID, pa.name AS Activity, pa.type
+LIMIT 10;",24,0,false
+5a3,,"MATCH (p:Patient)-[:EXPERIENCES]->(i:Issue)
+RETURN i.description AS Issue, count(p) AS Affected_Patients
+ORDER BY Affected_Patients DESC
+LIMIT 5;",25,0,false
+5a1,,"MATCH path = (p:Patient {patientID: ""P001""})-[:UNDERGOES]->(pa:Process_Activity)
+-[:OCCURS_IN]->(l:Location)
+RETURN p.patientID, pa.name AS Activity, l.name AS Location
+ORDER BY pa.name;",26,0,false
+5a2,,"// Find patients who gave negative feedback and what issues they reported
+MATCH (p:Patient)-[:GIVES_FEEDBACK]->(f:Feedback_Comment {overall_sentiment: ""negative""})
+MATCH (p)-[:EXPERIENCES]->(i:Issue)
+RETURN p.patientID AS Patient, 
+       f.raw_text AS Negative_Feedback,
+       i.description AS Reported_Issue,
+       i.category AS Issue_Category
+ORDER BY p.patientID
+LIMIT 10;",27,0,false
+5b1,,"CREATE (newPatient:Patient {
+  patientID: ""P100"",
+  age_group: ""younger_high_tech_utilizer"", 
+  gender: ""F"",
+  overall_satisfaction_score: 4.5
+})
+WITH newPatient
+MATCH (pa:Process_Activity {name: ""Triage""})
+CREATE (newPatient)-[:UNDERGOES]->(pa);",28,0,false
+5b2,,"MATCH (t:Technology_System {name: ""Electronic_Health_Record (EHR)""})
+SET t.usability_score = 4.2
+RETURN t.name, t.usability_score;",29,0,false
+5c1,,"// Find processes with the most connections (most central/important) - FIXED SYNTAX
+MATCH (pa:Process_Activity)
+RETURN pa.name AS Process,
+       COUNT { MATCH (pa)<-[:UNDERGOES]-() } AS Patients_Connected,
+       COUNT { MATCH (pa)<-[:PERFORMS]-() } AS Staff_Connected, 
+       COUNT { MATCH (pa)-[:CAUSES]->() } AS Issues_Caused,
+       COUNT { MATCH (pa)-[:USES_TECH]->() } AS Technologies_Used,
+       COUNT { MATCH (pa)<-[:UNDERGOES]-() } +
+       COUNT { MATCH (pa)<-[:PERFORMS]-() } +
+       COUNT { MATCH (pa)-[:CAUSES]->() } +
+       COUNT { MATCH (pa)-[:USES_TECH]->() } AS Total_Connections
+ORDER BY Total_Connections DESC
+LIMIT 10;",30,0,false
+New Folder 2,,,31,,true
+New Folder 1,,,32,,true
